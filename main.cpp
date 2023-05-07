@@ -16,7 +16,7 @@ class graph{
       std::vector<std::vector<int>> adjacencyList;
       std::vector<node> nodes;
   public:
-      graph(int n){
+         graph(int n){
         this->n = n;
         adjacencyList.resize(n);
         nodes.resize(n);
@@ -240,17 +240,17 @@ int main(){
   std::random_device rd;
   std::mt19937 gen(rd());
   std::uniform_int_distribution<> dis(0, 100);
-  int n = 10;
+  int n = 2000;
   graph* g = new graph(n);
   for (int i = 0; i < n; i++){
     int x = dis(gen);
     int y = dis(gen);
     g->addNode(i , x, y);
   }
-  g->setSmallWorld(5, 0.1);
+    g->setSmallWorld(5, 0.1);
 
-  g->printGraph();
- // g->plot();
+  //g->printGraph();
+ //g->plot();
  //
  g->dfs(1, 2);
 //g->printGraph();
