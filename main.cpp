@@ -4,7 +4,6 @@
 #include <cmath>
 #include <algorithm>
 #include <SFML/Graphics.hpp>
-
 class node{
   public:
       int i;
@@ -52,9 +51,11 @@ class graph{
       for(int i = 0; i < this->n; i++){
         closestNodes(i, nodes, n);
       }
+
       for(int i = 0; i < this->n; i++){
         setRandomize(i, adjacencyList, p, this->n);
       }
+
     }
 
     void setRandomize(int nodeIndex,std::vector<std::vector<int>> &adjacents , double p, int size){
@@ -69,10 +70,10 @@ class graph{
               do{
                 newVal = definal(gen);
               }while( (newVal == nodeIndex || newVal == adjacents[nodeIndex][i]) && std::find(adjacents[nodeIndex].begin(), adjacents[nodeIndex].end(), newVal) == adjacents[nodeIndex].end());
-              std::cout << "No " << nodeIndex  << ":Mudou do valor " << adjacents[nodeIndex][i] << " para o nó " << newVal << std::endl;
+            //  std::cout << "No " << nodeIndex  << ":Mudou do valor " << adjacents[nodeIndex][i] << " para o nó " << newVal << std::endl;
               adjacents[nodeIndex][i] = newVal;
 
-              std::cout<< "Prova: " << adjacents[nodeIndex][i] << std::endl;
+             // std::cout<< "Prova: " << adjacents[nodeIndex][i] << std::endl;
             }
         }
 
@@ -177,8 +178,6 @@ for (int i = 0; i < nodes.size(); ++i) {
 
     }
 }
-
-
         // Display window
         sf::Texture texture;
         texture.create(window.getSize().x, window.getSize().y);
@@ -188,25 +187,71 @@ for (int i = 0; i < nodes.size(); ++i) {
         screenshot.saveToFile(filename);
 
     }
+    bool dfsUtil(int curr, int destination, std::vector<bool>& visited, std::vector<int>& parent) {
+        visited[curr] = true;
+
+        if (curr == destination) {
+            return true;
+        }
+
+        for (int neighbor : adjacencyList[curr]) {
+            if (!visited[neighbor]) {
+                parent[neighbor] = curr;
+                if (dfsUtil(neighbor, destination, visited, parent)) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    void dfs(int source, int destination) {
+      std::vector<bool> visited(n, false);
+      std::vector<int> parent(n, -1);
+
+        bool found = dfsUtil(source, destination, visited, parent);
+
+        if (!found) {
+          std::cout << "Destination node not reachable from source node" << std::endl;
+            return;
+        }
+
+        std::vector<int> path;
+        int curr = destination;
+        while (curr != -1) {
+            path.push_back(curr);
+            curr = parent[curr];
+        }
+
+        std::cout << "Path from node " << source << " to node " << destination << ":" << std::endl;
+        for (int i = path.size() - 1; i >= 0; i--) {
+          std::cout << path[i] << " ";
+        }
+        std::cout << std::endl;
+    }
+
     };
 
-//g++ main.cpp -o main -lsfml-graphics -lsfml-window -lsfml-system
+//g++ main.cpp -o main -lsfml-graphics -lsfml-window -lsfml-system -limplot
 
 
 int main(){
   std::random_device rd;
   std::mt19937 gen(rd());
-  std::uniform_int_distribution<> dis(-100, 100);
-  int n = 30;
+  std::uniform_int_distribution<> dis(0, 100);
+  int n = 10;
   graph* g = new graph(n);
   for (int i = 0; i < n; i++){
     int x = dis(gen);
     int y = dis(gen);
     g->addNode(i , x, y);
   }
-  g->setSmallWorld(3, 0.1);
+  g->setSmallWorld(5, 0.1);
 
   g->printGraph();
-  g->plot();
-g->printGraph();
+ // g->plot();
+ //
+ g->dfs(1, 2);
+//g->printGraph();
 }
