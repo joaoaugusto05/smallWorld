@@ -1,26 +1,29 @@
 import numpy as np
 import random
 from queue import PriorityQueue
+from collections import deque
 import time
 import json
 
-def dfsUtil(graph, curr, destination, visited, parent):
-    visited[curr] = True
-    if curr == destination:
+def dfsUtil(graph, node, goal, visited, parent, pathCost):
+    visited[node] = True
+    if node == goal:
         return True
-    for vizinho in graph.adjacencyList[curr].keys():
-        if not visited[vizinho]:
-            parent[vizinho] = curr
-            if dfsUtil(graph, vizinho, destination, visited, parent):
+    for neighbor in graph.getNeighbors(node):
+        if not visited[neighbor]:
+            parent[neighbor] = node
+            pathCost[neighbor] = pathCost[node] + graph.adjacencyList[node][neighbor]
+            if dfsUtil(graph, neighbor, goal, visited, parent, pathCost):
                 return True
     return False
-    
+
 def dfs(graph, nodeO, nodeD, verbose=False):
     graph.pathed = True
     graph.path = []
     visited = np.zeros(graph.n, dtype=bool)
     parent = np.full(graph.n, -1)
-    found = dfsUtil(graph, nodeO, nodeD, visited, parent)
+    pathCost = np.zeros(graph.n)
+    found = dfsUtil(graph, nodeO, nodeD, visited, parent, pathCost)
     if verbose:
         print("\nDFS")
     if not found:
@@ -28,16 +31,16 @@ def dfs(graph, nodeO, nodeD, verbose=False):
         graph.path.append(nodeD)
         if verbose:
             print("No path was found!")
-            return -1
+        return -1
     else:
         curr = nodeD
-        #graph.path.append(curr)
         while curr != -1:
             graph.path.insert(0, curr)
             curr = parent[curr]
         if verbose:
             print(f"Path: {' -> '.join(map(str,graph.path))}")
-        return graph.path
+            print(f"Cost: {pathCost[nodeD]:.3f}")
+        return graph.path, pathCost[nodeD]
 
 def AStar(graph, nodeO, nodeD, verbose=False):
         frontier = PriorityQueue()
@@ -62,6 +65,8 @@ def AStar(graph, nodeO, nodeD, verbose=False):
         if verbose:
             print("\nA*")
         if nodeD not in cameFrom:
+            graph.path.append(nodeO)
+            graph.path.append(nodeD)
             if verbose:
                 print("No path was found!")
             return -1
@@ -75,6 +80,132 @@ def AStar(graph, nodeO, nodeD, verbose=False):
                 print(f"Path: {' -> '.join(map(str,graph.path))}")
                 print(f"Cost: {currentCost[nodeD]:.3f}")
             return graph.path, currentCost[nodeD]
+
+def heuristic(nodeA, nodeB):
+    return np.linalg.norm(np.array([nodeA.x, nodeA.y]) - np.array([nodeB.x, nodeB.y]))
+
+def bestFirst(graph, nodeO, nodeD, verbose=False):
+    frontier = PriorityQueue()
+    frontier.put((0, nodeO))
+    came_from = {nodeO: None}
+    currentCost = {nodeO: 0}
+
+    while not frontier.empty():
+        _, current = frontier.get()
+        if current == nodeD:
+            break
+        for next_node in graph.getNeighbors(current):
+            if next_node not in came_from:
+                cost = currentCost[current] + graph.adjacencyList[current][next_node]
+                currentCost[next_node] = cost
+                priority = heuristic(graph.nodes[nodeD], graph.nodes[next_node])
+                frontier.put((priority, next_node))
+                came_from[next_node] = current
+    
+    graph.pathed = True
+    graph.path = []
+    if verbose:
+        print("\nBest-First")
+    if nodeD not in came_from:
+        graph.path.append(nodeO)
+        graph.path.append(nodeD)
+        if verbose:
+            print("No path was found!")
+        return -1
+    else:
+        current = nodeD
+        while current is not None:
+            graph.path.append(current)
+            current = came_from[current]
+        graph.path.reverse()
+        if verbose:
+                print(f"Path: {' -> '.join(map(str,graph.path))}")
+                print(f"Cost: {currentCost[nodeD]:.3f}")
+        return graph.path, currentCost[nodeD]
+
+def bfs(graph, nodeO, nodeD, verbose=False):
+    queue = deque()
+
+    visited = [False] * (graph.n)
+  
+    parent = [-1] * (graph.n)
+
+    queue.append(nodeO)
+    visited[nodeO] = True
+
+    graph.pathed = True
+    graph.path = []
+
+    if verbose:
+        print("\nBFS")
+
+    while queue:
+        currentNode = queue.popleft()
+  
+        if currentNode == nodeD:
+            while currentNode != -1:
+                graph.path.append(currentNode)
+                currentNode = parent[currentNode]
+            graph.path = graph.path[::-1]
+            cost = sum(graph.adjacencyList[graph.path[i]][graph.path[i+1]] for i in range(len(graph.path)-1))
+            if verbose:
+                if verbose:
+                    print(f"Path: {' -> '.join(map(str,graph.path))}")
+                    print(f"Cost: {cost:.3f}")
+            return graph.path, cost
+  
+        for i in graph.getNeighbors(currentNode):
+            if visited[i] == False:
+                queue.append(i)
+                visited[i] = True
+                parent[i] = currentNode
+    graph.path.append(nodeO)
+    graph.path.append(nodeD)
+    if verbose:
+        print("No path found!")
+    return -1
+
+def dijkstra(graph, nodeO, nodeD, verbose=False):
+    queue = PriorityQueue()
+    queue.put((0, nodeO))
+    visited = set()
+    predecessors = {nodeO: None}
+    distances = {nodeO: 0}
+
+    graph.pathed = True
+    graph.path = []
+
+    if verbose:
+        print("\nDijkstra")
+    while not queue.empty():
+        (dist, currentNode) = queue.get()
+
+        visited.add(currentNode)
+
+        if currentNode == nodeD:
+            path = []
+            total_cost = distances[currentNode]
+            while currentNode is not None:
+                graph.path.append(currentNode)
+                currentNode = predecessors[currentNode]
+            graph.path.reverse()
+            if verbose:
+                print(f"Path: {' -> '.join(map(str,graph.path))}")
+                print(f"Cost: {total_cost:.3f}")
+            return path, total_cost
+
+        for neighbor in graph.getNeighbors(currentNode):
+            new_dist = distances[currentNode] + graph.adjacencyList[currentNode][neighbor]
+
+            if neighbor not in visited and (neighbor not in distances or new_dist < distances[neighbor]):
+                distances[neighbor] = new_dist
+                predecessors[neighbor] = currentNode
+                queue.put((new_dist, neighbor))
+    graph.path.append(nodeO)
+    graph.path.append(nodeD)
+    if verbose:
+        print("No path was found!")
+    raise -1
 
 class NpEncoder(json.JSONEncoder):
     def default(self, obj):
@@ -100,11 +231,41 @@ def experiments(graph, searchMethods, nPairs=10, savingPath=None):
                 startTime = time.time()
                 search = dfs(graph,nodes[i],nodes[i+1])
                 endTime = time.time()
-                results[method][i//2] = {'nodeO':nodes[i], 'nodeD':nodes[i+1], 'path':search, 'time':(endTime - startTime)}
+                if search == -1:
+                    results[method][i//2] = {'nodeO':nodes[i], 'nodeD':nodes[i+1], 'path':-1, 'cost':-1, 'time':(endTime - startTime)}
+                elif len(search) > 1:
+                    results[method][i//2] = {'nodeO':nodes[i], 'nodeD':nodes[i+1], 'path':search[0], 'cost':search[1], 'time':(endTime - startTime)}
                     
             elif method == 'AStar':
                 startTime = time.time()
                 search = AStar(graph,nodes[i],nodes[i+1])
+                endTime = time.time()
+                if search == -1:
+                    results[method][i//2] = {'nodeO':nodes[i], 'nodeD':nodes[i+1], 'path':-1, 'cost':-1, 'time':(endTime - startTime)}
+                elif len(search) > 1:
+                    results[method][i//2] = {'nodeO':nodes[i], 'nodeD':nodes[i+1], 'path':search[0], 'cost':search[1], 'time':(endTime - startTime)}
+
+            elif method == 'bestFirst':
+                startTime = time.time()
+                search = bestFirst(graph,nodes[i],nodes[i+1])
+                endTime = time.time()
+                if search == -1:
+                    results[method][i//2] = {'nodeO':nodes[i], 'nodeD':nodes[i+1], 'path':-1, 'cost':-1, 'time':(endTime - startTime)}
+                elif len(search) > 1:
+                    results[method][i//2] = {'nodeO':nodes[i], 'nodeD':nodes[i+1], 'path':search[0], 'cost':search[1], 'time':(endTime - startTime)}
+
+            elif method == 'bfs':
+                startTime = time.time()
+                search = bfs(graph,nodes[i],nodes[i+1])
+                endTime = time.time()
+                if search == -1:
+                    results[method][i//2] = {'nodeO':nodes[i], 'nodeD':nodes[i+1], 'path':-1, 'cost':-1, 'time':(endTime - startTime)}
+                elif len(search) > 1:
+                    results[method][i//2] = {'nodeO':nodes[i], 'nodeD':nodes[i+1], 'path':search[0], 'cost':search[1], 'time':(endTime - startTime)}
+
+            elif method == 'dijkstra':
+                startTime = time.time()
+                search = dijkstra(graph,nodes[i],nodes[i+1])
                 endTime = time.time()
                 if search == -1:
                     results[method][i//2] = {'nodeO':nodes[i], 'nodeD':nodes[i+1], 'path':-1, 'cost':-1, 'time':(endTime - startTime)}

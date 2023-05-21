@@ -59,37 +59,46 @@ class graph:
             print(self.adjacencyList[i].keys())
             print("-------------------------------------------------")
     
-    def plot(self, savingPath=None, labels=False):
+    def reset(self):
+        self.path = []
+        self.pathed = False
+
+    def plot(self, savingPath=None, labels=False, size=(15,10)):
+        fig, ax = plt.subplots(figsize=size)
+
         X_pos = np.array([[nodeA.x] for nodeA in self.nodes])
         Y_pos = np.array([[nodeA.y] for nodeA in self.nodes])
-        plt.scatter(X_pos, Y_pos, color = 'blue')
+        ax.scatter(X_pos, Y_pos, color = 'blue')
+
         if self.pathed:
             Xinicio = self.nodes[self.path[0]].x
             Yinicio = self.nodes[self.path[0]].y
-            plt.scatter(Xinicio, Yinicio, color = 'green', s = 100)
+            ax.scatter(Xinicio, Yinicio, color = 'green', s = 100)
 
             Xfim = self.nodes[self.path[-1]].x
             Yfim = self.nodes[self.path[-1]].y
-            plt.scatter(Xfim, Yfim, color = 'red', s = 100)
+            ax.scatter(Xfim, Yfim, color = 'red', s = 100)
 
             XposPath = []
             YposPath = []
-            for i in self.path:
+            for i in self.path[1:-1]:
                 XposPath.append(self.nodes[i].x)
                 YposPath.append(self.nodes[i].y)
-            plt.scatter(XposPath, YposPath, color = 'black')
+            ax.scatter(XposPath, YposPath, color = 'magenta',s = 75)
 
             if labels:
                 for idx, node in enumerate(self.nodes):
-                    plt.annotate(idx,(node.x,node.y+0.20))
+                    ax.annotate(idx,(node.x,node.y+0.20))
             
-        X = []
-        Y = []
         for i in range(len(self.nodes)):
             for j in self.adjacencyList[i].keys():
-                plt.plot([self.nodes[i].x, self.nodes[j]. x], [self.nodes[i].y, self.nodes[j].y], c= 'black', linewidth = 0.5)
+                if self.nodes[i].i in self.path and self.nodes[j].i in self.path:
+                    ax.plot([self.nodes[i].x, self.nodes[j].x], [self.nodes[i].y, self.nodes[j].y], c= 'darkorange', linewidth = 2)
+                else:
+                    ax.plot([self.nodes[i].x, self.nodes[j].x], [self.nodes[i].y, self.nodes[j].y], c= 'black', linewidth = 0.5)
                 if labels:
-                    plt.annotate(f"{self.adjacencyList[i][j]:.2f}",((self.nodes[i].x+self.nodes[j].x)/2,(self.nodes[i].y+self.nodes[j].y)/2))
+                    ax.annotate(f"{self.adjacencyList[i][j]:.2f}",((self.nodes[i].x+self.nodes[j].x)/2,(self.nodes[i].y+self.nodes[j].y)/2))
+
         if savingPath:
             plt.savefig(savingPath)
         plt.show()
