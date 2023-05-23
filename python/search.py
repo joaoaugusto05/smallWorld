@@ -183,7 +183,6 @@ def dijkstra(graph, nodeO, nodeD, verbose=False):
         visited.add(currentNode)
 
         if currentNode == nodeD:
-            path = []
             total_cost = distances[currentNode]
             while currentNode is not None:
                 graph.path.append(currentNode)
@@ -192,7 +191,7 @@ def dijkstra(graph, nodeO, nodeD, verbose=False):
             if verbose:
                 print(f"Path: {' -> '.join(map(str,graph.path))}")
                 print(f"Cost: {total_cost:.3f}")
-            return path, total_cost
+            return graph.path, total_cost
 
         for neighbor in graph.getNeighbors(currentNode):
             new_dist = distances[currentNode] + graph.adjacencyList[currentNode][neighbor]

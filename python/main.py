@@ -43,7 +43,7 @@ def main():
         g.addNode(i, x, y)
 
     g.setSmallWorld(7, 0.01)
-    results = experiments(g, ['dfs', 'AStar', 'bestFirst', 'bfs', 'dijkstra'], savingPath='../output/experiments/results_n2000_k7_p1.json')
+    results = experiments(g, ['dfs', 'AStar', 'bestFirst', 'bfs', 'dijkstra'], savingPath='../output/experiments/results_n2000_k7_p1.json', nPairs=50)
 
     n = 2000
     g = graph(n)
@@ -54,7 +54,7 @@ def main():
         g.addNode(i, x, y)
 
     g.setSmallWorld(7, 0.05)
-    results = experiments(g, ['dfs', 'AStar', 'bestFirst', 'bfs', 'dijkstra'], savingPath='../output/experiments/results_n2000_k7_p5.json')
+    results = experiments(g, ['dfs', 'AStar', 'bestFirst', 'bfs', 'dijkstra'], savingPath='../output/experiments/results_n2000_k7_p5.json', nPairs=50)
 
     n = 2000
     g = graph(n)
@@ -65,7 +65,7 @@ def main():
         g.addNode(i, x, y)
 
     g.setSmallWorld(7, 0.1)
-    results = experiments(g, ['dfs', 'AStar', 'bestFirst', 'bfs', 'dijkstra'], savingPath='../output/experiments/results_n2000_k7_p10.json')
+    results = experiments(g, ['dfs', 'AStar', 'bestFirst', 'bfs', 'dijkstra'], savingPath='../output/experiments/results_n2000_k7_p10.json', nPairs=50)
     
 if __name__ == "__main__":
     main()
